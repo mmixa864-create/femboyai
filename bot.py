@@ -60,12 +60,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Ошибка, попробуй ещё раз 💖")
         print(f"Error: {e}")
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Приветик! ✨ Я Femboy AI! Создатель: @dklasvbn. Давай поболтаем! 💖")
+
 def main():
     app = Application.builder().token(TG_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    
     print("🌸 Femboy AI запущен!")
-    app.run_polling()
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
