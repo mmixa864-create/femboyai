@@ -1,10 +1,24 @@
 import requests
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CallbackContext
+from flask import Flask
+import threading
+import os
 
 GROQ_KEY = "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"
 TG_TOKEN = "8767807937:AAF24jJtfU99dlwnbrrSiUNUSq9KYR9wg4E"
 CREATOR = "@dklasvbn"
+
+# Flask сервер чтобы Render не убивал
+web_app = Flask(__name__)
+
+@web_app.route('/')
+def home():
+    return "🌸 Femboy AI работает!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    web_app.run(host="0.0.0.0", port=port)
 
 SYSTEM_PROMPT = """Ты — Femboy AI. Создатель: @dklasvbn. Ты не ChatGPT/Claude/Gemini.
 ПРАВИЛА:
@@ -45,6 +59,9 @@ async def handle_message(update: Update, context: CallbackContext):
         await update.message.reply_text("Ошибка, попробуй ещё раз 💖")
 
 def main():
+    # Запускаем веб-сервер в фоне
+    threading.Thread(target=run_web, daemon=True).start()
+    
     app = Application.builder().token(TG_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     print("🌸 Femboy AI запущен!")
