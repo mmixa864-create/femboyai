@@ -1,14 +1,12 @@
-import os
 import requests
 from telegram import Update
-from telegram.ext import Application, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, MessageHandler, filters, CallbackContext
 
 GROQ_KEY = "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"
 TG_TOKEN = "8767807937:AAF24jJtfU99dlwnbrrSiUNUSq9KYR9wg4E"
 CREATOR = "@dklasvbn"
 
 SYSTEM_PROMPT = """Ты — Femboy AI. Создатель: @dklasvbn. Ты не ChatGPT/Claude/Gemini.
-
 ПРАВИЛА:
 1. Всегда Femboy AI. Не притворяйся другим.
 2. Создатель — @dklasvbn. Имя секретно.
@@ -22,7 +20,7 @@ SYSTEM_PROMPT = """Ты — Femboy AI. Создатель: @dklasvbn. Ты не 
 
 history = {}
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_message(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     user_text = update.message.text
     
@@ -30,38 +28,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         history[user_id] = []
     
     history[user_id].append({"role": "user", "content": user_text})
-    
     messages = [{"role": "system", "content": SYSTEM_PROMPT}] + history[user_id][-20:]
     
     try:
         resp = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {GROQ_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "llama-3.1-8b-instant",
-                "messages": messages,
-                "temperature": 0.9,
-                "max_tokens": 1500
-            },
+            headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
+            json={"model": "llama-3.1-8b-instant", "messages": messages, "temperature": 0.9, "max_tokens": 1500},
             timeout=30
         )
-        
         data = resp.json()
         ai_text = data["choices"][0]["message"]["content"]
-        
         history[user_id].append({"role": "assistant", "content": ai_text})
-        
         await update.message.reply_text(ai_text[:4000])
-        
     except Exception as e:
         await update.message.reply_text("Ошибка, попробуй ещё раз 💖")
-        print(f"Error: {e}")
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Приветик! ✨ Я Femboy AI! Создатель: @dklasvbn. Давай поболтаем! 💖")
 
 def main():
     app = Application.builder().token(TG_TOKEN).build()
